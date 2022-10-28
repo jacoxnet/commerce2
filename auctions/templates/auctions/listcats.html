@@ -1,0 +1,21 @@
+{% extends "auctions/layout.html" %}
+{% load static %}
+
+{% block title %}
+Create Listing
+{% endblock %}
+
+{% block body %}
+    <table class="table table-sm">
+        <tr>
+            <th>Categories</th>
+        </tr>
+        {% for item in cats %}
+            <tr>
+                <td>{{ item }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+
+{% endblock %}
