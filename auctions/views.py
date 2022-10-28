@@ -30,6 +30,7 @@ def create(request):
         item = AuctionItem(name=name, description=description, starting=starting, category=category, 
                            listedBy = listedBy, pic=pic)
         item.save()
+        return render(request, "auctions/index.html")
     else:
         return render(request, "auctions/create.html")
 
