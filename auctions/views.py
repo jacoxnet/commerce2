@@ -8,7 +8,9 @@ from .models import User, Category, Bid, AuctionItem, Comment
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+    allItems = AuctionItem.objects.all()
+    context = {"itemList": allItems}
+    return render(request, "auctions/index.html", context)
 
 
 def categories(request):

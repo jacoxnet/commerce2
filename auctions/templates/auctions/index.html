@@ -3,5 +3,22 @@
 {% block body %}
     <h2>Active Listings</h2>
 
-    TODO
+<div class="container">
+    {% for item in itemList %}
+        <div class="row">
+            <div classs="col-lg-6">
+                <img src={{ item.picURL }} alt="item pic">
+            </div>
+            <div classs="col-lg-6">
+                <ul class="nobullet">
+                    <li>Item name: {{ item.name }}</li>
+                    <li>Category: {{ item.category }}
+                    <li>Description: {{ item.description }}</li>
+                </ul>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+
 {% endblock %}
