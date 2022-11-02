@@ -1,3 +1,26 @@
 body {
     padding: 10px;
 }
+
+ul.nobullet {
+    list-style-type: none;
+    border-bottom: 1px solid black;
+    border-top: 1px solid black;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+img {
+    max-width: 200px;
+    max-height: 200px;
+    height: auto;
+    width: auto;
+}
+
+.clickregion {
+    cursor: pointer;
+}
+
+button {
+    margin: 5px;
+}

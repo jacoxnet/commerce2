@@ -1,0 +1,65 @@
+{% extends "auctions/layout.html" %}
+{% load static %}
+
+{% block title %}
+    Item Details
+{% endblock %}
+
+{% block body %}
+    <h2>Item Details:</h2>
+    <h4>Auction ID: {{ item.itemId }}</h4>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <h2>
+                    {{ item.name }}
+                </h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <img src="{{ item.pic }}" alt="item picture">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <ul class="nobullet">
+                    <li>Status: {% if item.completed %}Completed{% else %}Active{% endif %}</li>
+                    <li>Category: {{ item.category }}
+                    <li>{{ item.description }}</li>
+                    {% if item.bid %}
+                        <li>Current bid by {{ item.bid.bidder}} of {{ item.bid.bidAmount }}</li>
+                    {% else %}
+                        <li>No bids - minimum bid is {{ item.starting }}
+                    {% endif %}
+                    {% if mylisting %}
+                        <li><em>This is your listing. </em>
+                        <button type="button" class="btn btn-primary" onclick='bProcess("close")'>Close Listing</button></li>
+                    {% endif %}
+                </ul>
+                {% if mywatched %}
+                    <em>On your watchlist. </em>
+                    <button type="button" class="btn btn-primary" onclick='bProcess("remwatch")'>Remove</button></li>
+                {% else %}
+                    {% if user.is_authenticated %}
+                        <button type="button" class="btn btn-primary" onclick='bProcess("addwatch")'>Add to Watchlist</button></li>
+                    {% endif %}
+                {% endif %}
+                <form id="actionform" action="{% url 'buttonprocess' %}" method="post">
+                    {% csrf_token %}
+                    <input class="form-control" name="process" type="text" value="" hidden>
+                    <input class="form-control" name="itemid" type="text" value="{{ item.itemId }}" hidden>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* Called on click of auction item - submits form */
+        function bProcess(action) {
+            document.querySelector('input[name="process"]').setAttribute('value', action);
+            document.querySelector("#actionform").submit();
+        }
+    </script>
+
+{% endblock %}

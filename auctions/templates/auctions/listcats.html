@@ -11,11 +11,23 @@ Create Listing
             <th>Categories</th>
         </tr>
         {% for item in cats %}
-            <tr>
+            <tr class='clickregion' onclick="selectItem('{{ item }}')">
                 <td>{{ item }}</td>
             </tr>
         {% endfor %}
+        <form id="selectCat" action="{% url 'categories' %}" method="post">
+            {% csrf_token %}
+            <input class="form-control" name="mycat" type="text" value="" hidden>
+        </form>
+
     </table>
 
+    <script>
+        /* Called on click of auction item - submits form */
+        function selectItem(item) {
+            document.querySelector('input[name="mycat"]').setAttribute('value', item);
+            document.querySelector("#selectCat").submit();
+        }
+    </script>
 
 {% endblock %}

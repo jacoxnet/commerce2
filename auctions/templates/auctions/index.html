@@ -1,26 +1,51 @@
 {% extends "auctions/layout.html" %}
+{% load static %}
+
+{% block title %}
+    Auction List
+{% endblock %}
 
 {% block body %}
-    {% load static %}
-    <h2>Active Listings</h2>
+    <h2>{{ listName }}</h2>
+    <div class="container">
+        {% if itemList %}
+            {% for item in itemList %}
+                <div class="row clickregion" onclick="selectItem('{{ item.itemId }}')">
+                    <div class="col-lg-3">
+                        <img src="{{ item.pic }}" alt="item picture">
+                    </div>
+                    <div classs="col-lg-9">
+                        <ul class="nobullet">
+                            <li>Auction ID: {{ item.itemId }}</li>
+                            <li>Status: {% if item.completed %}Completed{% else %}Active{% endif %}</li>
+                            <li>{{ item.name }}</li>
+                            <li>Category: {{ item.category }}
+                            <li>{{ item.description }}</li>
+                            {% if item.bid %}
+                                <li>Current bid by {{ item.bid.bidder}} of {{ item.bid.bidAmount }}</li>
+                            {% else %}
+                                <li>No bids - minimum bid is {{ item.starting }}
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <h3>No listings to display</h3>
+        {% endif %}
+        <form id="selectItemForm" action="{% url 'displayitem' %}" method="post">
+            {% csrf_token %}
+            <input class="form-control" name="select" type="text" value="" hidden>
+        </form>
 
-<div class="container">
-    {% for item in itemList %}
-        <div class="row">
-            <div classs="col-lg-6">
-                
-                <img src="https://live.staticflickr.com/65535/52471294803_5992fc25fe_t.jpg" width="100" height="77" alt="gamingpc">
-            </div>
-            <div classs="col-lg-6">
-                <ul class="nobullet">
-                    <li>Item name: {{ item.name }}</li>
-                    <li>Category: {{ item.category }}
-                    <li>Description: {{ item.description }}</li>
-                </ul>
-            </div>
-        </div>
-    {% endfor %}
-</div>
+    </div>
 
+    <script>
+        /* Called on click of auction item - submits form */
+        function selectItem(item) {
+            document.querySelector('input[name="select"]').setAttribute('value', item);
+            document.querySelector("#selectItemForm").submit();
+        }
+    </script>
 
 {% endblock %}
