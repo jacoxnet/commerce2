@@ -12,5 +12,6 @@ urlpatterns = [
     path("displayitem", views.displayitem, name="displayitem"),
     path("watchlist", views.watchlist, name="watchlist"),
     path("myitemlist", views.myitemlist, name="myitemlist"),
-    path("buttonprocess", views.buttonprocess, name="buttonprocess")
+    path("enterbid", views.enterbid, name="enterbid"),
+    path("addcomment", views.addcomment, name="addcomment")
 ]

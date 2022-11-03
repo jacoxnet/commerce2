@@ -12,19 +12,28 @@
             {% for item in itemList %}
                 <div class="row clickregion" onclick="selectItem('{{ item.itemId }}')">
                     <div class="col-lg-3">
-                        <img src="{{ item.pic }}" alt="item picture">
+                        <img class="img-fluid" src="{{ item.pic }}" alt="item picture">
                     </div>
                     <div classs="col-lg-9">
                         <ul class="nobullet">
                             <li>Auction ID: {{ item.itemId }}</li>
-                            <li>Status: {% if item.completed %}Completed{% else %}Active{% endif %}</li>
+                            <li>Status: 
+                                {% if not item.completed %}
+                                    Active
+                                {% else %}
+                                    {% if item.bid %}
+                                        Sold
+                                    {% else %}
+                                        Closed unsold
+                                    {% endif %}
+                                {% endif %}</li>
                             <li>{{ item.name }}</li>
                             <li>Category: {{ item.category }}
                             <li>{{ item.description }}</li>
                             {% if item.bid %}
-                                <li>Current bid by {{ item.bid.bidder}} of {{ item.bid.bidAmount }}</li>
+                                <li>High bid by {{ item.bid.bidder}} of ${{ item.bid.bidAmount }}</li>
                             {% else %}
-                                <li>No bids - minimum bid is {{ item.starting }}
+                                <li>No bids - minimum bid is ${{ item.starting }}
                             {% endif %}
                         </ul>
                     </div>

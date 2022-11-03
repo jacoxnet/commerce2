@@ -17,43 +17,82 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-lg-12">
+            <div class="col-lg-4">
                 <img src="{{ item.pic }}" alt="item picture">
+            </div>
+            <div class="col-lg-8">
+                <p>Status: {{ itemstatus }}</p>
+                <p>Category: {{ item.category }}</p>
+                <p>{{ item.description }}</p>
+                <p>Listed by {{ item.listedBy }}</p>
+                <p>
+                    {% if item.bid %}
+                        High bid by {{ item.bid.bidder}} of ${{ item.bid.bidAmount }}
+                    {% else %}
+                        No bids - minimum bid is ${{ item.starting }}
+                    {% endif %}
+                </p>
+                {% if user.is_authenticated %}
+                    {% if userstatus %}
+                        <p>
+                            <em>You are the {{ userstatus }}</em>
+                            {% if userstatus == "buyer" %} You won the auction! {% endif %}
+                            {% if userstatus == "lister" %}
+                                <button type="button" class="btn btn-primary" onclick='bProcess("close")'>Close Listing</button></li>
+                            {% endif %}
+                            {% if userstatus == "seller" and not item.bid %}
+                                <button type="button" class="btn btn-primary" onclick='bProcess("relist")'>Relist</button></li>
+                            {% endif %}
+                        </p>
+                    {% else %}
+                        <p>
+                            <div class="input-group mb-3">
+                                Enter a bid
+                                <form id="bidform" action="{% url 'enterbid' %}" method="post">
+                                    {% csrf_token %}
+                                    <input class="form-control" name="bidamt" type="number" value="0.00">
+                                    <input class="form-control" name="myitem" type="text" value="{{ item.itemId }}" hidden>
+                                    <button type="submit" class="btn btn-primary">Enter Bid</button></li>
+                                </form>
+                            </div>
+                        </p>
+                    {% endif %}
+                    <p>
+                        {% if watchstatus %}
+                            <em>On your watchlist. </em>
+                            <button type="button" class="btn btn-primary" onclick='bProcess("remwatch")'>Remove</button>
+                        {% else %}
+                            <button type="button" class="btn btn-primary" onclick='bProcess("addwatch")'>Add to Watchlist</button>
+                        {% endif %}
+                    </p>
+                    <form id="actionform" action="{% url 'displayitem' %}" method="post">
+                        {% csrf_token %}
+                        <input class="form-control" name="process" type="text" value="" hidden>
+                        <input class="form-control" name="select" type="text" value="{{ item.itemId }}" hidden>
+                    </form>
+                {% endif %}
             </div>
         </div>
         <div class="row">
-            <div class="col-lg-12">
-                <ul class="nobullet">
-                    <li>Status: {% if item.completed %}Completed{% else %}Active{% endif %}</li>
-                    <li>Category: {{ item.category }}
-                    <li>{{ item.description }}</li>
-                    {% if item.bid %}
-                        <li>Current bid by {{ item.bid.bidder}} of {{ item.bid.bidAmount }}</li>
-                    {% else %}
-                        <li>No bids - minimum bid is {{ item.starting }}
-                    {% endif %}
-                    % if user.is_authenticated %}
-                        {% if mylisting %}
-                            <li><em>This is your listing. </em>
-                            <button type="button" class="btn btn-primary" onclick='bProcess("close")'>Close Listing</button></li>
-                        {% endif %}
-                    {% endif %}
-                </ul>
-                {% if mywatched %}
-                    <em>On your watchlist. </em>
-                    <button type="button" class="btn btn-primary" onclick='bProcess("remwatch")'>Remove</button></li>
-                {% else %}
-                    {% if user.is_authenticated %}
-                        <button type="button" class="btn btn-primary" onclick='bProcess("addwatch")'>Add to Watchlist</button></li>
-                    {% endif %}
+            <div class="col-9">
+                {% if user.is_authenticated %}
+                    <form id="commentform" action="{% url 'addcomment' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">Add a comment</button>
+                        <input class="form-control" name="newcomment" type="text" value="" placeholder="Your comment">
+                        <input class="form-control" name="myitem" type="text" value="{{ item.itemId }}" hidden>
+                    </form>
                 {% endif %}
-                <form id="actionform" action="{% url 'buttonprocess' %}" method="post">
-                    {% csrf_token %}
-                    <input class="form-control" name="process" type="text" value="" hidden>
-                    <input class="form-control" name="itemid" type="text" value="{{ item.itemId }}" hidden>
-                </form>
+                {% if comments %}
+                    <h4>Comments:</h4>
+                    {% for comment in comments %}
+                        <p>{{ comment.user }} says <em>{{ comment.text }}</em></p>
+                    {% endfor %}
+                {% endif %}        
             </div>
         </div>
+        
+        
     </div>
 
     <script>

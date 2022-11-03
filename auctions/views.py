@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from auctions.models import  User, Category, Bid, AuctionItem, Comment
+from auctions.models import User, Category, Bid, AuctionItem, Comment
 
 
 # default route
@@ -19,33 +19,50 @@ def displayitem(request):
     if request.method == "POST":
         itemid = request.POST["select"]
         myItem = AuctionItem.objects.get(itemId=itemid)
-        mylisting = True if request.user == myItem.listedBy else False
-        mywatched = True if request.user in myItem.watching.all() else False
+        action = request.POST["process"] if "process" in request.POST else "pass"
+        print ('action is ', action)
+        if action == "close":
+            myItem.completed = True
+            myItem.save()
+        elif action == "remwatch":
+            myItem.watching.remove(request.user)
+            myItem.save()
+        elif action == "addwatch":
+            myItem.watching.add(request.user)
+            myItem.save()
+        elif action == "relist":
+            myItem.completed = False
+            myItem.save()
+        else:
+            # action must be pass
+            pass
+        itemstatus, userstatus, watchstatus, comments = getstatus(request, myItem)
         context = {
             "item": myItem,
-            "mylisting": mylisting,
-            "mywatched": mywatched
+            "itemstatus": itemstatus,
+            "userstatus": userstatus,
+            "watchstatus": watchstatus,
+            "comments": comments
         }
         return render(request, "auctions/displayitem.html", context)
 
-# route buttonprocess
-def buttonprocess(request):
-    if request.method == "POST":
-        action = request.POST["process"]
-        item = request.POST["itemid"]
-        ai = AuctionItem.objects.get(itemId=item)
-        if action == "close":
-            ai.completed = True
-        elif action == "remwatch":
-            ai.watching.remove(request.user)
-        else:
-            # action == "addwatc":
-            ai.watching.add(request.user)
-        ai.save()
-        return HttpResponseRedirect(reverse("index"))
-        
+# helper function getstatus()
+def getstatus(request, item):
+    if not item.completed:
+        itemstatus = "Active"
     else:
-        pass
+        itemstatus = "Sold" if item.bid else "Closed unsold"
+    userstatus = None
+    watchstatus = False
+    if request.user.is_authenticated:
+        if request.user == item.listedBy:
+            userstatus = "seller" if item.completed else "lister"
+        if item.bid and request.user == item.bid.bidder:
+            userstatus = "buyer" if item.completed else "high bidder"
+        if request.user in item.watching.all():
+            watchstatus = True
+    comments = item.comments.all()
+    return itemstatus, userstatus, watchstatus, comments
 
 # route categories/
 def categories(request):
@@ -58,6 +75,56 @@ def categories(request):
     else:
         cats = {"cats": Category.objects.all()}
         return render(request, "auctions/listcats.html", cats)
+
+# route enterbid/
+def enterbid(request):
+    if request.method == "POST":
+        bidamt = float(request.POST["bidamt"])
+        print('bid is ', bidamt)
+        item = request.POST["myitem"]
+        myItem = AuctionItem.objects.get(itemId=item)
+        if (bidamt < myItem.starting) or (myItem.bid and bidamt <= myItem.bid.bidAmount):
+            message = "Bid too low"
+            print(message)
+        else:
+            b = Bid(bidder=request.user, bidAmount=bidamt)
+            b.save()
+            myItem.bid = b
+            myItem.save()
+            message = "Valid bid entered"
+            print(message)
+        itemstatus, userstatus, watchstatus, comments = getstatus(request, myItem)
+        context = {
+            "item": myItem,
+            "itemstatus": itemstatus,
+            "userstatus": userstatus,
+            "watchstatus": watchstatus,
+            "comments": comments,
+
+            "messages": [message]
+        }
+        return render(request, "auctions/displayitem.html", context)
+        
+# route addcomment/
+def addcomment(request):
+    if request.method == "POST":
+        comment = request.POST["newcomment"]
+        print("new comment", comment)
+        item = request.POST["myitem"]
+        myItem = AuctionItem.objects.get(itemId=item)
+        c = Comment(user=request.user, text=comment)
+        c.save()
+        myItem.comments.add(c)
+        myItem.save()
+        itemstatus, userstatus, watchstatus, comments = getstatus(request, myItem)
+        context = {
+            "item": myItem,
+            "itemstatus": itemstatus,
+            "userstatus": userstatus,
+            "watchstatus": watchstatus,
+            "comments": comments,
+        }
+        return render(request, "auctions/displayitem.html", context)
 
 # route watchlist
 def watchlist(request):
@@ -85,16 +152,28 @@ def create(request):
     if request.method == "POST":
         name = request.POST["title"]
         description = request.POST["description"]
-        starting = float(request.POST["starting"])
-        category = Category.objects.get(type=request.POST["category"])
+        starting = request.POST["starting"]
+        if not name or not description or not starting:
+            messages = ["Name, description, and minimum bid must be specified"]
+            cats = Category.objects.all()
+            return render(request, "auctions/create.html", {"messages": messages, "cats": cats})
+        starting = float(starting)
         listedBy = request.user
+        category = request.POST["category"]
+        if category == "Select the category":
+            category = "Other"
+        category = Category.objects.get(type=category)
         pic = request.POST["image"]
+        if not pic:
+            # representation of no pic
+            pic = "https://live.staticflickr.com/65535/52471214195_90f244ca67_o_d.png"
         item = AuctionItem(name=name, description=description, starting=starting, category=category, 
                            listedBy = listedBy, pic=pic)
         item.save()
-        return render(request, "auctions/index.html")
+        return HttpResponseRedirect(reverse("index"))
     else:
-        return render(request, "auctions/create.html")
+        cats = {"cats": Category.objects.all()}
+        return render(request, "auctions/create.html", cats)
 
         
 
@@ -113,7 +192,7 @@ def login_view(request):
             return HttpResponseRedirect(reverse("index"))
         else:
             return render(request, "auctions/login.html", {
-                "message": "Invalid username and/or password."
+                "messages": ["Invalid username and/or password."]
             })
     else:
         return render(request, "auctions/login.html")
@@ -136,7 +215,7 @@ def register(request):
         confirmation = request.POST["confirmation"]
         if password != confirmation:
             return render(request, "auctions/register.html", {
-                "message": "Passwords must match."
+                "messages": ["Passwords must match."]
             })
 
         # Attempt to create new user
@@ -145,7 +224,7 @@ def register(request):
             user.save()
         except IntegrityError:
             return render(request, "auctions/register.html", {
-                "message": "Username already taken."
+                "messages": ["Username already taken."]
             })
         login(request, user)
         return HttpResponseRedirect(reverse("index"))

@@ -13,8 +13,9 @@ class Category(models.Model):
     #   Computers
     #   Tools
     #   Autos
+    #   Other
     categoryId = models.AutoField(primary_key=True)
-    type = models.CharField(max_length=20, blank=True)
+    type = models.CharField(max_length=20)
     
     def __str__(self):
         return self.type

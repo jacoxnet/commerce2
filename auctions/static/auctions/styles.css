@@ -11,8 +11,8 @@ ul.nobullet {
 }
 
 img {
-    max-width: 200px;
-    max-height: 200px;
+    max-width: 250px;
+    max-height: 250px;
     height: auto;
     width: auto;
 }
@@ -21,6 +21,6 @@ img {
     cursor: pointer;
 }
 
-button {
+button, input, textarea, select {
     margin: 5px;
 }
