@@ -3,11 +3,13 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 
 from auctions.models import User, Category, Bid, AuctionItem, Comment
 
 
-# default route
+# default route 
+#   retrieves all active auctions and sends list to template
 def index(request):
     allItems = AuctionItem.objects.filter(completed=False)
     context = {"itemList": allItems,
@@ -15,6 +17,9 @@ def index(request):
     return render(request, "auctions/index.html", context)
 
 # route displayitem/
+#   contains much of app's functionality. Users can view information about
+#   an auction item, add to watchlist, bid, close an auction, and make and view
+#   comments
 def displayitem(request):
     if request.method == "POST":
         itemid = request.POST["select"]
@@ -45,8 +50,12 @@ def displayitem(request):
             "comments": comments
         }
         return render(request, "auctions/displayitem.html", context)
+    else:
+        return HttpResponseRedirect(reverse("index"))        
 
 # helper function getstatus()
+#   returns status of items, users, watch lists, and comments
+#   for use in templates
 def getstatus(request, item):
     if not item.completed:
         itemstatus = "Active"
@@ -65,6 +74,8 @@ def getstatus(request, item):
     return itemstatus, userstatus, watchstatus, comments
 
 # route categories/
+#   displays list of categories and allows selection of one, gathers
+#   auctions in that category, and then calls default route to display them
 def categories(request):
     if request.method == "POST":
         gcat = request.POST["mycat"]
@@ -77,6 +88,8 @@ def categories(request):
         return render(request, "auctions/listcats.html", cats)
 
 # route enterbid/
+#   called on post to allow bid to be entered
+@login_required
 def enterbid(request):
     if request.method == "POST":
         bidamt = float(request.POST["bidamt"])
@@ -104,8 +117,11 @@ def enterbid(request):
             "messages": [message]
         }
         return render(request, "auctions/displayitem.html", context)
+    else:
+        return HttpResponseRedirect(reverse("index"))
         
 # route addcomment/
+@login_required
 def addcomment(request):
     if request.method == "POST":
         comment = request.POST["newcomment"]
@@ -125,8 +141,12 @@ def addcomment(request):
             "comments": comments,
         }
         return render(request, "auctions/displayitem.html", context)
+    else:
+        return HttpResponseRedirect(reverse("index"))
 
 # route watchlist
+#   gathers auctions on a users watchlist and sends them to be displayed
+@login_required
 def watchlist(request):
     if request.method == "POST":
         pass
@@ -137,6 +157,9 @@ def watchlist(request):
                    "listName": "My Watch List"}
         return render(request, "auctions/index.html", context)
 
+# route /myitemlist
+#   gathers a user's owned auctions and send them to be displayed
+@login_required
 def myitemlist(request):
     if request.method == "POST":
         pass
@@ -148,6 +171,8 @@ def myitemlist(request):
         return render(request, "auctions/index.html", context)
 
 # route create/
+#   allows creation of auction item
+@login_required
 def create(request):
     if request.method == "POST":
         name = request.POST["title"]
@@ -175,8 +200,6 @@ def create(request):
         cats = {"cats": Category.objects.all()}
         return render(request, "auctions/create.html", cats)
 
-        
-
 # route login
 def login_view(request):
     if request.method == "POST":
@@ -197,12 +220,10 @@ def login_view(request):
     else:
         return render(request, "auctions/login.html")
 
-
 # route logout
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
-
 
 # route register 
 def register(request):
