@@ -32,9 +32,11 @@
                     {% else %}
                         <li>No bids - minimum bid is {{ item.starting }}
                     {% endif %}
-                    {% if mylisting %}
-                        <li><em>This is your listing. </em>
-                        <button type="button" class="btn btn-primary" onclick='bProcess("close")'>Close Listing</button></li>
+                    % if user.is_authenticated %}
+                        {% if mylisting %}
+                            <li><em>This is your listing. </em>
+                            <button type="button" class="btn btn-primary" onclick='bProcess("close")'>Close Listing</button></li>
+                        {% endif %}
                     {% endif %}
                 </ul>
                 {% if mywatched %}
